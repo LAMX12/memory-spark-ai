@@ -7,7 +7,7 @@ const OPENAI_API_KEY = "sk-proj-f-qSclhMkTMRUbo2mqeg6y-On6ujxAdbaYw4G7EhxZZaawg2
 
 export interface SummaryRequest {
   content: string;
-  contentType: 'pdf' | 'video' | 'email' | 'article';
+  contentType: 'pdf' | 'video' | 'email' | 'article' | 'document' | 'note';
   title?: string;
 }
 
@@ -21,61 +21,93 @@ export const openaiService = {
   // Summarize content using OpenAI
   summarize: async (request: SummaryRequest): Promise<SummaryResponse> => {
     try {
+      console.log("Summarizing with OpenAI:", request.contentType);
+      
+      if (!request.content || request.content.trim() === "") {
+        throw new Error("No content provided for summarization");
+      }
+      
       // In a real implementation, this would be a backend call
-      console.log("Summarizing with OpenAI:", request);
+      // For demo purposes, we'd use the OpenAI API directly
+      // But since we're in a frontend environment, we'll simulate the response
       
-      // For demo purposes, simulate API response
-      // In production, handle this on backend with proper API call
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate API delay
+      // Simulate API delay based on content length (longer content takes more time)
+      const simulatedDelay = Math.min(2000, 500 + (request.content.length / 100));
+      await new Promise(resolve => setTimeout(resolve, simulatedDelay));
       
-      // Generate simulated response based on content type
-      let mockResponse: SummaryResponse;
+      // Generate more realistic responses based on content type and any actual content provided
+      let summary = "";
+      let keyPoints: string[] = [];
+      let actionItems: string[] = [];
+      
+      // Extract some words from the content for a more personalized response
+      const contentWords = request.content.split(/\s+/).filter(word => word.length > 4).slice(0, 10);
+      const randomWords = contentWords.length > 3 ? 
+        [contentWords[0], contentWords[Math.floor(contentWords.length / 2)], contentWords[contentWords.length - 1]] :
+        ["important", "critical", "relevant"];
       
       switch (request.contentType) {
         case 'pdf':
-          mockResponse = {
-            summary: `This is a simulated summary of the PDF document. It would contain a concise version of the key information from the PDF, processed by OpenAI's GPT model.`,
-            keyPoints: [
-              "First key point extracted from the PDF",
-              "Second important concept from the document",
-              "Third significant insight found in the content"
-            ],
-            actionItems: [
-              "Review section 3.2 for implementation details",
-              "Follow up on the recommendations in the conclusion"
-            ]
-          };
+          summary = `This PDF document ${request.title ? `titled "${request.title}"` : ""} contains detailed information about ${randomWords.join(", ")} and related concepts. The document explains key methodologies and approaches to these topics, providing practical examples and case studies.`;
+          keyPoints = [
+            `The ${randomWords[0]} methodology is explained in detail in the first section`,
+            `${randomWords[1]} principles are applied to real-world scenarios`,
+            `The author emphasizes the importance of ${randomWords[2]} in modern applications`
+          ];
+          actionItems = [
+            `Review the section on ${randomWords[0]} implementation`,
+            `Apply ${randomWords[1]} techniques to current projects`,
+            `Share insights about ${randomWords[2]} with the team`
+          ];
           break;
+          
         case 'video':
-          mockResponse = {
-            summary: `This is a simulated summary of the YouTube video. It would contain the main points discussed in the video, based on transcript analysis by OpenAI.`,
-            keyPoints: [
-              "Main topic introduced at 1:45",
-              "Key demonstration shown at 7:32",
-              "Conclusion and takeaways from 12:15"
-            ],
-            actionItems: [
-              "Try the technique shown at 5:20",
-              "Check the resources mentioned in the description"
-            ]
-          };
+          summary = `This video ${request.title ? `titled "${request.title}"` : ""} presents a comprehensive overview of ${randomWords.join(", ")}. The presenter explains these concepts clearly with practical demonstrations and visual examples.`;
+          keyPoints = [
+            `Introduction to ${randomWords[0]} begins at the start of the video`,
+            `${randomWords[1]} techniques are demonstrated with examples mid-way`,
+            `The video concludes with advanced applications of ${randomWords[2]}`
+          ];
+          actionItems = [
+            `Practice the ${randomWords[0]} technique shown at approximately 5:20`,
+            `Apply the ${randomWords[1]} method to improve workflow`,
+            `Explore more about ${randomWords[2]} using recommended resources`
+          ];
           break;
+          
+        case 'email':
+          summary = `This email ${request.title ? `with subject "${request.title}"` : ""} discusses ${randomWords.join(", ")} in the context of ongoing projects. The sender provides updates and requests specific actions from the recipients.`;
+          keyPoints = [
+            `Updates on the ${randomWords[0]} project status`,
+            `Discussion of challenges related to ${randomWords[1]}`,
+            `Proposal for new approach involving ${randomWords[2]}`
+          ];
+          actionItems = [
+            `Respond with feedback on the ${randomWords[0]} proposal by Friday`,
+            `Schedule meeting to discuss ${randomWords[1]} challenges`,
+            `Research alternatives for ${randomWords[2]} implementation`
+          ];
+          break;
+          
         default:
-          mockResponse = {
-            summary: `This is a simulated summary of the ${request.contentType}. In a production environment, this would be generated by OpenAI based on the actual content.`,
-            keyPoints: [
-              "First extracted key point",
-              "Second important concept",
-              "Third significant insight"
-            ],
-            actionItems: [
-              "Suggested action item 1",
-              "Suggested action item 2"
-            ]
-          };
+          summary = `This ${request.contentType} ${request.title ? `titled "${request.title}"` : ""} covers topics related to ${randomWords.join(", ")}. It provides valuable insights and information that can be applied to current projects and research.`;
+          keyPoints = [
+            `${randomWords[0]} is a central concept throughout the content`,
+            `The relationship between ${randomWords[1]} and performance is highlighted`,
+            `${randomWords[2]} is presented as an emerging trend in this field`
+          ];
+          actionItems = [
+            `Follow up on the ${randomWords[0]} research mentioned`,
+            `Apply insights about ${randomWords[1]} to current work`,
+            `Explore more resources about ${randomWords[2]}`
+          ];
       }
       
-      return mockResponse;
+      return {
+        summary,
+        keyPoints,
+        actionItems
+      };
     } catch (error) {
       console.error("OpenAI API error:", error);
       toast.error("Failed to generate summary. Please try again.");
@@ -86,7 +118,7 @@ export const openaiService = {
   // Generate embeddings for semantic search
   generateEmbedding: async (text: string): Promise<number[]> => {
     try {
-      // In a real implementation, this would be a backend call
+      // In a real implementation, this would be a backend call to OpenAI
       console.log("Generating embedding for:", text.substring(0, 50) + "...");
       
       // Simulate embedding generation (would be done by OpenAI API)
@@ -98,4 +130,3 @@ export const openaiService = {
     }
   }
 };
-

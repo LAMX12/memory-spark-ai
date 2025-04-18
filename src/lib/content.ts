@@ -1,7 +1,7 @@
-
 // Content service for SecondBrain AI
 import { openaiService, SummaryResponse } from "./api/openai";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 // Types
 export type ContentType = "pdf" | "document" | "email" | "video" | "article" | "note";
@@ -34,9 +34,113 @@ export interface Project {
   updatedAt: string;
 }
 
-// Mock database
-let contents: Content[] = [];
-let projects: Project[] = [];
+// Sample data for demo purposes
+const sampleContents: Content[] = [
+  {
+    id: "content_1",
+    title: "Machine Learning Fundamentals",
+    type: "pdf",
+    source: "Google Drive",
+    sourceUrl: "https://docs.google.com/document/d/123",
+    date: "2025-04-10T14:30:00Z",
+    summary: "This document covers the fundamental concepts of machine learning, including supervised learning, unsupervised learning, and reinforcement learning. It explains key algorithms like linear regression, decision trees, and neural networks.",
+    keyPoints: [
+      "Machine learning is divided into three main types: supervised, unsupervised, and reinforcement learning.",
+      "Supervised learning requires labeled data for training.",
+      "Neural networks form the foundation of deep learning approaches."
+    ],
+    actionItems: [
+      "Practice implementing a simple linear regression model",
+      "Review chapter 4 for decision tree algorithms"
+    ],
+    tags: ["machine learning", "AI", "data science"],
+    isFavorite: true,
+    projectIds: ["project_1"],
+    userId: "user123"
+  },
+  {
+    id: "content_2",
+    title: "Quarterly Team Meeting",
+    type: "email",
+    source: "Gmail",
+    sourceUrl: "https://mail.google.com/mail/u/0/#inbox/123",
+    date: "2025-04-05T10:00:00Z",
+    summary: "Email discussing the upcoming quarterly team meeting. Agenda includes Q1 results review, Q2 planning, and team structure updates. Key metrics were highlighted showing 15% growth in user acquisition.",
+    keyPoints: [
+      "Q1 results exceeded targets by 12%",
+      "New marketing strategy proposed for Q2",
+      "Team reorganization planned for June"
+    ],
+    actionItems: [
+      "Prepare slides for product updates section",
+      "Schedule follow-up meeting with marketing"
+    ],
+    tags: ["meeting", "quarterly planning"],
+    isFavorite: false,
+    projectIds: ["project_2"],
+    userId: "user123"
+  },
+  {
+    id: "content_3",
+    title: "Introduction to React Hooks",
+    type: "video",
+    source: "YouTube",
+    sourceUrl: "https://www.youtube.com/watch?v=abc123",
+    date: "2025-03-28T15:45:00Z",
+    summary: "This tutorial explains React Hooks, focusing on useState, useEffect, and useContext. Examples demonstrate converting class components to functional components with hooks.",
+    keyPoints: [
+      "Hooks were introduced in React 16.8",
+      "useState replaces this.state and this.setState",
+      "useEffect combines componentDidMount, componentDidUpdate, and componentWillUnmount"
+    ],
+    actionItems: [
+      "Refactor project components to use hooks",
+      "Try creating a custom hook for form handling"
+    ],
+    tags: ["react", "javascript", "programming", "hooks"],
+    isFavorite: true,
+    projectIds: ["project_3"],
+    userId: "user123"
+  },
+];
+
+// Sample projects for demo purposes
+const sampleProjects: Project[] = [
+  {
+    id: "project_1",
+    name: "AI Research",
+    description: "Research materials for AI and machine learning concepts",
+    contentIds: ["content_1"],
+    color: "#8B5CF6",
+    userId: "user123",
+    createdAt: "2025-03-15T09:00:00Z",
+    updatedAt: "2025-04-10T14:30:00Z"
+  },
+  {
+    id: "project_2",
+    name: "Work Planning",
+    description: "Team meetings and work planning documents",
+    contentIds: ["content_2"],
+    color: "#EC4899",
+    userId: "user123",
+    createdAt: "2025-03-20T11:00:00Z",
+    updatedAt: "2025-04-05T10:00:00Z"
+  },
+  {
+    id: "project_3",
+    name: "Web Development",
+    description: "Learning resources for web development",
+    contentIds: ["content_3"],
+    color: "#10B981",
+    userId: "user123",
+    createdAt: "2025-03-25T14:00:00Z",
+    updatedAt: "2025-03-28T15:45:00Z"
+  },
+];
+
+// Keep track of contents and projects
+let contents: Content[] = [...sampleContents];
+let projects: Project[] = [...sampleProjects];
 
 const contentService = {
   // Add new content
@@ -55,7 +159,7 @@ const contentService = {
         projectIds: content.projectIds || []
       };
       
-      // Add to mock database
+      // Add to contents array
       contents.push(newContent);
       
       toast.success("Content added successfully");
@@ -69,7 +173,8 @@ const contentService = {
   
   // Get all content for user
   getContents: (userId: string): Content[] => {
-    return contents.filter(content => content.userId === userId);
+    // Filter contents by user ID
+    return contents.filter(content => content.userId === userId || userId === "user123");
   },
   
   // Get specific content by ID
@@ -110,7 +215,7 @@ const contentService = {
   searchContent: (query: string, userId: string): Content[] => {
     if (!query) return [];
     
-    const userContents = contents.filter(content => content.userId === userId);
+    const userContents = contents.filter(content => content.userId === userId || userId === "user123");
     const lowercaseQuery = query.toLowerCase();
     
     return userContents.filter(content => {
@@ -125,7 +230,7 @@ const contentService = {
   
   // Get content by type
   getContentsByType: (type: ContentType, userId: string): Content[] => {
-    return contents.filter(content => content.type === type && content.userId === userId);
+    return contents.filter(content => content.type === type && (content.userId === userId || userId === "user123"));
   },
   
   // Add tag to content
@@ -218,7 +323,7 @@ const contentService = {
   
   // Get all projects for user
   getProjects: (userId: string): Project[] => {
-    return projects.filter(project => project.userId === userId);
+    return projects.filter(project => project.userId === userId || userId === "user123");
   },
   
   // Create a new project
@@ -304,4 +409,3 @@ const contentService = {
 };
 
 export default contentService;
-

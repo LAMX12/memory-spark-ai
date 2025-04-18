@@ -27,32 +27,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const initAuth = async () => {
       try {
         // Check for auth code in URL (for OAuth callback)
-        const urlParams = new URLSearchParams(window.location.search);
-        const authCode = urlParams.get("code");
+        if (window.location.pathname === "/auth/callback") {
+          console.log("Processing OAuth callback...");
+          // The actual auth handling will happen in the AuthCallback component
+          return;
+        }
         
-        if (authCode && window.location.pathname === "/auth/callback") {
-          const user = await auth.handleCallback(authCode);
-          if (user) {
-            setUser(user);
-            navigate("/dashboard");
+        // Check if user is already signed in
+        const currentUser = await auth.getCurrentUser();
+        if (currentUser) {
+          console.log("User is authenticated:", currentUser.email);
+          setUser(currentUser);
+          
+          // Redirect to dashboard if on login/signup page
+          if (location.pathname === '/login' || location.pathname === '/signup') {
+            navigate('/dashboard');
           }
-        } else {
-          // Check if user is already signed in
-          const currentUser = await auth.getCurrentUser();
-          if (currentUser) {
-            setUser(currentUser);
-            
-            // Redirect to dashboard if on login/signup page
-            if (location.pathname === '/login' || location.pathname === '/signup') {
-              navigate('/dashboard');
-            }
-          } else if (location.pathname !== '/' && 
-                    location.pathname !== '/login' && 
-                    location.pathname !== '/signup' && 
-                    !location.pathname.startsWith('/auth/')) {
-            // Redirect to login if not authenticated and trying to access protected route
-            navigate('/login', { state: { from: location.pathname } });
-          }
+        } else if (location.pathname !== '/' && 
+                  location.pathname !== '/login' && 
+                  location.pathname !== '/signup' && 
+                  !location.pathname.startsWith('/auth/')) {
+          console.log("Not authenticated, redirecting to login");
+          // Redirect to login if not authenticated and trying to access protected route
+          navigate('/login', { state: { from: location.pathname } });
         }
       } catch (err) {
         console.error("Auth initialization error:", err);
@@ -63,7 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     
     // Set up auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth state changed:", event, session);
+      console.log("Auth state changed:", event);
       
       if (event === 'SIGNED_IN' && session) {
         const currentUser = {
@@ -76,8 +73,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         };
         setUser(currentUser);
         
-        if (location.pathname === '/' || location.pathname === '/login' || location.pathname === '/signup') {
-          navigate('/dashboard');
+        // Only redirect if not on auth callback page
+        if (window.location.pathname !== "/auth/callback") {
+          if (location.pathname === '/' || location.pathname === '/login' || location.pathname === '/signup') {
+            navigate('/dashboard');
+          }
         }
       }
       

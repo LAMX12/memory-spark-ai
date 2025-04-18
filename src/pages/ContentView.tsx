@@ -1,311 +1,323 @@
 
-import { useState, useEffect } from "react";
-import DashboardLayout from "@/components/dashboard/DashboardLayout";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import contentService, { Content } from "@/lib/content";
+import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  ArrowLeft,
-  Star,
-  ExternalLink,
-  Pencil,
-  Trash2,
-  Tag,
-  Plus,
-  FileText,
-  Mail,
-  Video,
-  BookOpen,
-  Bookmark
-} from "lucide-react";
+import { Loader2, Star, StarOff, Tag, BookmarkPlus, Share2, FileText, Video, Mail, Newspaper, FileType, Archive, Pencil, Trash2 } from "lucide-react";
+import contentService, { Content } from "@/lib/content";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const ContentView = () => {
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [content, setContent] = useState<Content | null>(null);
   const [loading, setLoading] = useState(true);
+  const [addingTag, setAddingTag] = useState(false);
   const [newTag, setNewTag] = useState("");
-  const [isAddingTag, setIsAddingTag] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   
   useEffect(() => {
-    if (id) {
-      const fetchContent = () => {
-        try {
-          const contentData = contentService.getContentById(id);
-          if (contentData) {
-            setContent(contentData);
-          } else {
-            toast.error("Content not found");
-            navigate("/dashboard/content");
-          }
-        } catch (error) {
-          console.error("Error fetching content:", error);
-          toast.error("Failed to load content");
-        } finally {
-          setLoading(false);
-        }
-      };
+    const fetchContent = () => {
+      if (!id || !user) return;
       
-      fetchContent();
+      try {
+        const foundContent = contentService.getContentById(id);
+        if (foundContent) {
+          setContent(foundContent);
+        } else {
+          toast.error("Content not found");
+          navigate("/dashboard/content");
+        }
+      } catch (error) {
+        console.error("Error fetching content:", error);
+        toast.error("Failed to load content");
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchContent();
+  }, [id, user, navigate]);
+  
+  const toggleFavorite = () => {
+    if (!content) return;
+    
+    try {
+      const updated = contentService.toggleFavorite(content.id);
+      if (updated) {
+        setContent(updated);
+      }
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
     }
-  }, [id, navigate]);
+  };
   
   const handleAddTag = () => {
     if (!content || !newTag.trim()) return;
     
-    const updatedContent = contentService.addTagToContent(content.id, newTag.trim());
-    if (updatedContent) {
-      setContent(updatedContent);
-      setNewTag("");
-      setIsAddingTag(false);
+    try {
+      const updated = contentService.addTagToContent(content.id, newTag.trim());
+      if (updated) {
+        setContent(updated);
+        setNewTag("");
+        setAddingTag(false);
+      }
+    } catch (error) {
+      console.error("Error adding tag:", error);
     }
   };
   
   const handleRemoveTag = (tag: string) => {
     if (!content) return;
     
-    const updatedContent = contentService.removeTagFromContent(content.id, tag);
-    if (updatedContent) {
-      setContent(updatedContent);
-    }
-  };
-  
-  const handleToggleFavorite = () => {
-    if (!content) return;
-    
-    const updatedContent = contentService.toggleFavorite(content.id);
-    if (updatedContent) {
-      setContent(updatedContent);
+    try {
+      const updated = contentService.removeTagFromContent(content.id, tag);
+      if (updated) {
+        setContent(updated);
+      }
+    } catch (error) {
+      console.error("Error removing tag:", error);
     }
   };
   
   const handleDelete = () => {
-    if (!content || !window.confirm("Are you sure you want to delete this content?")) return;
+    if (!content) return;
     
-    if (contentService.deleteContent(content.id)) {
-      navigate("/dashboard/content");
+    try {
+      if (contentService.deleteContent(content.id)) {
+        toast.success("Content deleted");
+        navigate("/dashboard/content");
+      }
+    } catch (error) {
+      console.error("Error deleting content:", error);
+      toast.error("Failed to delete content");
     }
   };
   
-  const getTypeIcon = () => {
-    if (!content) return <FileText />;
-    
-    switch (content.type) {
-      case "pdf":
-        return <FileText />;
-      case "email":
-        return <Mail />;
-      case "video":
-        return <Video />;
-      case "article":
-        return <BookOpen />;
-      case "note":
-        return <Bookmark />;
-      default:
-        return <FileText />;
+  const getContentTypeIcon = (type: string) => {
+    switch (type) {
+      case "pdf": return <FileText className="h-5 w-5" />;
+      case "video": return <Video className="h-5 w-5" />;
+      case "email": return <Mail className="h-5 w-5" />;
+      case "article": return <Newspaper className="h-5 w-5" />;
+      case "document": return <FileType className="h-5 w-5" />;
+      case "note": return <Pencil className="h-5 w-5" />;
+      default: return <Archive className="h-5 w-5" />;
     }
   };
   
-  const getContentDate = () => {
-    if (!content?.date) return "";
-    
-    const date = new Date(content.date);
-    return date.toLocaleDateString(undefined, {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-full py-20">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </DashboardLayout>
+    );
+  }
+  
+  if (!content) {
+    return (
+      <DashboardLayout>
+        <div className="p-6">
+          <div className="text-center py-12">
+            <h2 className="text-2xl font-bold mb-2">Content Not Found</h2>
+            <p className="text-muted-foreground mb-6">
+              The content you're looking for doesn't exist or has been removed.
+            </p>
+            <Button onClick={() => navigate("/dashboard/content")}>
+              Back to Content Library
+            </Button>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
-      <div className="p-6 space-y-8">
-        <div className="flex items-center justify-between">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate(-1)}
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
+      <div className="p-6 space-y-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div className="flex items-center">
+            <div className="mr-3 p-2 rounded-full bg-primary/10">
+              {getContentTypeIcon(content.type)}
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-3xl font-bold">{content.title}</h1>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={toggleFavorite}
+                  className="ml-2"
+                >
+                  {content.isFavorite ? (
+                    <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
+                  ) : (
+                    <StarOff className="h-5 w-5" />
+                  )}
+                </Button>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span>From {content.source}</span>
+                <span>•</span>
+                <span>{new Date(content.date).toLocaleDateString()}</span>
+                <span>•</span>
+                <span className="capitalize">{content.type}</span>
+              </div>
+            </div>
+          </div>
           
-          <div className="space-x-2">
-            {content && (
-              <>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleToggleFavorite}
-                  className={content.isFavorite ? "text-yellow-400" : ""}
-                >
-                  <Star className={`h-5 w-5 ${content.isFavorite ? "fill-yellow-400" : ""}`} />
+          <div className="flex space-x-2">
+            <Button variant="outline" size="sm">
+              <Share2 className="h-4 w-4 mr-2" />
+              Share
+            </Button>
+            <Button variant="outline" size="sm">
+              <BookmarkPlus className="h-4 w-4 mr-2" />
+              Add to Project
+            </Button>
+            <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="destructive" size="sm">
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete
                 </Button>
-                
-                <Button
-                  variant="ghost"
-                  size="icon"
-                >
-                  <Pencil className="h-5 w-5" />
-                </Button>
-                
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-destructive"
-                  onClick={handleDelete}
-                >
-                  <Trash2 className="h-5 w-5" />
-                </Button>
-              </>
-            )}
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Confirm Deletion</DialogTitle>
+                </DialogHeader>
+                <p>Are you sure you want to delete "{content.title}"? This action cannot be undone.</p>
+                <DialogFooter className="mt-4">
+                  <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button variant="destructive" onClick={handleDelete}>
+                    Delete
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
         
-        {loading ? (
-          <div className="space-y-4">
-            <Skeleton className="h-10 w-3/4" />
-            <Skeleton className="h-6 w-1/2" />
-            <div className="space-y-2 mt-8">
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-3/4" />
-            </div>
-          </div>
-        ) : content ? (
-          <>
-            <div>
-              <div className="flex items-center gap-3 mb-2 text-muted-foreground">
-                <div className="p-2 rounded-full bg-primary/10">
-                  {getTypeIcon()}
-                </div>
-                <div>
-                  <span>{content.type.charAt(0).toUpperCase() + content.type.slice(1)}</span>
-                  <span className="mx-2">•</span>
-                  <span>{content.source}</span>
-                  <span className="mx-2">•</span>
-                  <span>{getContentDate()}</span>
-                </div>
-              </div>
-              
-              <h1 className="text-3xl font-bold">{content.title}</h1>
-              
-              {content.sourceUrl && (
-                <a 
-                  href={content.sourceUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center text-primary hover:underline mt-2"
-                >
-                  View original source
-                  <ExternalLink className="h-4 w-4 ml-1" />
-                </a>
-              )}
-            </div>
-            
-            <div className="flex flex-wrap gap-2 items-center">
-              {content.tags.map(tag => (
-                <Badge 
-                  key={tag} 
-                  variant="secondary"
-                  className="pl-2 pr-1 py-0 flex items-center gap-1"
-                >
-                  {tag}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-5 w-5"
-                    onClick={() => handleRemoveTag(tag)}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <line x1="18" y1="6" x2="6" y2="18"></line>
-                      <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                  </Button>
-                </Badge>
-              ))}
-              
-              {isAddingTag ? (
-                <div className="flex items-center">
-                  <Input
-                    className="h-8 w-32"
-                    placeholder="New tag"
-                    value={newTag}
-                    onChange={e => setNewTag(e.target.value)}
-                    onKeyDown={e => e.key === 'Enter' && handleAddTag()}
-                    autoFocus
-                  />
-                  <Button 
-                    size="sm" 
-                    variant="ghost" 
-                    className="ml-1"
-                    onClick={handleAddTag}
-                  >
-                    Add
-                  </Button>
-                </div>
-              ) : (
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  className="h-7 w-7 rounded-full"
-                  onClick={() => setIsAddingTag(true)}
-                >
-                  <Plus className="h-3 w-3" />
-                </Button>
-              )}
-            </div>
-            
-            <Card className="p-6 glass-card">
-              <div className="space-y-6">
-                {content.summary && (
-                  <div>
-                    <h3 className="text-lg font-semibold mb-2">Summary</h3>
-                    <p className="text-muted-foreground">{content.summary}</p>
-                  </div>
-                )}
-                
-                {content.keyPoints && content.keyPoints.length > 0 && (
-                  <div>
-                    <h3 className="text-lg font-semibold mb-2">Key Points</h3>
-                    <ul className="list-disc pl-5 space-y-1">
-                      {content.keyPoints.map((point, index) => (
-                        <li key={index} className="text-muted-foreground">{point}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                
-                {content.actionItems && content.actionItems.length > 0 && (
-                  <div>
-                    <h3 className="text-lg font-semibold mb-2">Action Items</h3>
-                    <ul className="list-disc pl-5 space-y-1">
-                      {content.actionItems.map((item, index) => (
-                        <li key={index} className="text-muted-foreground">{item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            </Card>
-          </>
-        ) : (
-          <div className="text-center py-16">
-            <h2 className="text-2xl font-bold">Content not found</h2>
-            <p className="text-muted-foreground mt-2">
-              The content you're looking for doesn't exist or has been removed.
-            </p>
-            <Button 
-              onClick={() => navigate("/dashboard/content")}
-              className="mt-4"
+        {/* Tags section */}
+        <div className="flex flex-wrap gap-2 items-center">
+          <span className="text-sm text-muted-foreground">Tags:</span>
+          {content.tags.map((tag) => (
+            <Badge
+              key={tag}
+              variant="outline"
+              className="flex items-center gap-1 group"
             >
-              Back to Content Library
+              <Tag className="h-3 w-3" />
+              <span>{tag}</span>
+              <button 
+                onClick={() => handleRemoveTag(tag)}
+                className="ml-1 rounded-full hover:bg-muted p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+              </button>
+            </Badge>
+          ))}
+          {addingTag ? (
+            <div className="flex items-center gap-2">
+              <Input
+                value={newTag}
+                onChange={(e) => setNewTag(e.target.value)}
+                placeholder="Add tag..."
+                className="h-8 w-40 text-sm"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddTag();
+                  } else if (e.key === 'Escape') {
+                    setAddingTag(false);
+                    setNewTag("");
+                  }
+                }}
+              />
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={handleAddTag}
+              >
+                Add
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  setAddingTag(false);
+                  setNewTag("");
+                }}
+              >
+                Cancel
+              </Button>
+            </div>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs h-7"
+              onClick={() => setAddingTag(true)}
+            >
+              + Add tag
             </Button>
+          )}
+        </div>
+        
+        {/* Summary section */}
+        <Card className="glass-card">
+          <CardContent className="p-6">
+            <h2 className="text-2xl font-bold mb-4">Summary</h2>
+            <p className="text-lg mb-6">{content.summary}</p>
+            
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-xl font-bold mb-3">Key Points</h3>
+                <ul className="space-y-2 list-disc pl-5">
+                  {content.keyPoints?.map((point, index) => (
+                    <li key={index} className="text-lg">{point}</li>
+                  ))}
+                </ul>
+              </div>
+              
+              <div>
+                <h3 className="text-xl font-bold mb-3">Action Items</h3>
+                <ul className="space-y-2 list-disc pl-5">
+                  {content.actionItems?.map((item, index) => (
+                    <li key={index} className="text-lg">{item}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        {/* Source section */}
+        {content.sourceUrl && (
+          <div>
+            <h3 className="text-xl font-bold mb-3">Source</h3>
+            <a
+              href={content.sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              {content.sourceUrl}
+            </a>
           </div>
         )}
       </div>
@@ -314,4 +326,3 @@ const ContentView = () => {
 };
 
 export default ContentView;
-

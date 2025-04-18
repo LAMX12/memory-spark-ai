@@ -14,6 +14,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import ProjectsView from "./pages/ProjectsView";
 import ContentView from "./pages/ContentView";
+import ProjectContents from "./pages/ProjectContents";
 import SmartSearch from "./pages/SmartSearch";
 import AddContent from "./pages/AddContent";
 import Login from "./pages/Login";
@@ -39,6 +40,7 @@ const App = () => (
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/dashboard/content" element={<ProtectedRoute><ContentLibrary /></ProtectedRoute>} />
             <Route path="/dashboard/projects" element={<ProtectedRoute><ProjectsView /></ProtectedRoute>} />
+            <Route path="/dashboard/projects/:id" element={<ProtectedRoute><ProjectContents /></ProtectedRoute>} />
             <Route path="/dashboard/search" element={<ProtectedRoute><SmartSearch /></ProtectedRoute>} />
             <Route path="/dashboard/content/:id" element={<ProtectedRoute><ContentView /></ProtectedRoute>} />
             <Route path="/dashboard/add-content" element={<ProtectedRoute><AddContent /></ProtectedRoute>} />

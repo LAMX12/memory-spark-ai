@@ -40,8 +40,12 @@ export const googleService = {
     try {
       console.log("Fetching Drive files with token:", accessToken.substring(0, 5) + "...");
       
-      // In a real implementation, this would make an actual API call
-      // For demo, return mock data
+      if (!accessToken) {
+        throw new Error("No access token provided");
+      }
+      
+      // In a real implementation, we would make an actual API call
+      // For demo purposes, we'll return mock data to ensure UI is working
       await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API delay
       
       return [
@@ -80,9 +84,13 @@ export const googleService = {
   // Fetch emails from Gmail
   fetchEmails: async (accessToken: string): Promise<GoogleEmail[]> => {
     try {
-      console.log("Fetching Gmail emails with token:", accessToken.substring(0, 5) + "...");
+      console.log("Fetching Gmail emails with token:", accessToken?.substring(0, 5) + "...");
       
-      // In a real implementation, this would make an actual API call
+      if (!accessToken) {
+        throw new Error("No access token provided");
+      }
+      
+      // In a real implementation, we would make an actual API call
       // For demo, return mock data
       await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API delay
       
@@ -122,9 +130,14 @@ export const googleService = {
   // Fetch YouTube videos
   fetchYouTubeVideos: async (accessToken: string): Promise<YouTubeVideo[]> => {
     try {
-      console.log("Fetching YouTube videos with token:", accessToken.substring(0, 5) + "...");
+      console.log("Fetching YouTube videos with token:", accessToken?.substring(0, 5) + "...");
       
-      // In a real implementation, this would make an actual API call
+      // For YouTube, we can use either OAuth token or API key
+      if (!accessToken && !YOUTUBE_API_KEY) {
+        throw new Error("No authentication method available for YouTube");
+      }
+      
+      // In a real implementation, make an actual API call
       // For demo, return mock data
       await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API delay
       
@@ -184,7 +197,7 @@ export const googleService = {
       
       console.log(`Fetching YouTube video details for ID: ${videoId}`);
       
-      // In a real implementation, this would make an API call using the YouTube Data API
+      // If we have API key, we could make a real API call here
       // For demo, simulate response
       await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API delay
       
@@ -204,4 +217,3 @@ export const googleService = {
     }
   }
 };
-
