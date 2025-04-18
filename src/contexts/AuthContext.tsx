@@ -43,10 +43,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (location.pathname === '/login' || location.pathname === '/signup') {
             navigate('/dashboard');
           }
-        } else if (location.pathname !== '/' && 
-                  location.pathname !== '/login' && 
-                  location.pathname !== '/signup' && 
-                  !location.pathname.startsWith('/auth/')) {
+        } else if (
+          location.pathname !== '/' && 
+          location.pathname !== '/login' && 
+          location.pathname !== '/signup' && 
+          !location.pathname.startsWith('/auth/')
+        ) {
           console.log("Not authenticated, redirecting to login");
           // Redirect to login if not authenticated and trying to access protected route
           navigate('/login', { state: { from: location.pathname } });
@@ -65,7 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (event === 'SIGNED_IN' && session) {
         const currentUser = {
           id: session.user.id,
-          name: session.user.user_metadata.name || "User",
+          name: session.user.user_metadata.name || session.user.email?.split('@')[0] || "User",
           email: session.user.email || "",
           image: session.user.user_metadata.avatar_url,
           accessToken: session.access_token,

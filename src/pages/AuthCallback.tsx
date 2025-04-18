@@ -26,8 +26,16 @@ const AuthCallback = () => {
 
         if (session) {
           console.log("Session obtained successfully");
+          
           // Create user object from session
-          const user = await auth.handleCallback("");
+          const user = {
+            id: session.user.id,
+            name: session.user.user_metadata.name || session.user.email?.split('@')[0] || "User",
+            email: session.user.email || "",
+            image: session.user.user_metadata.avatar_url,
+            accessToken: session.access_token,
+            refreshToken: session.refresh_token,
+          };
           
           if (user) {
             toast.success("Successfully signed in!");

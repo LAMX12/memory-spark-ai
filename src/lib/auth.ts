@@ -88,7 +88,7 @@ export const auth = {
       
       return {
         id: data.session.user.id,
-        name: data.session.user.user_metadata.name || "User",
+        name: data.session.user.user_metadata.name || data.session.user.email?.split('@')[0] || "User",
         email: data.session.user.email || "",
         image: data.session.user.user_metadata.avatar_url,
         accessToken: data.session.access_token,
@@ -124,8 +124,7 @@ export const auth = {
   // Email sign-in with remember me
   signInWithEmail: async (email: string, password: string, rememberMe: boolean = false): Promise<User | null> => {
     try {
-      // For Supabase v2, we need to handle session duration differently
-      // The expiresIn property isn't directly supported in the options
+      // For Supabase v2, we handle session duration differently
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -142,11 +141,9 @@ export const auth = {
         return null;
       }
       
-      // If rememberMe is true, we'll extend the session duration
-      // This is handled on the Supabase side, but we can refresh the session
+      // If rememberMe is true, we'll note this for the UI but session persistence
+      // is managed by Supabase based on their defaults
       if (rememberMe) {
-        // We don't need to do anything special here with Supabase v2
-        // Session persistence is managed by Supabase based on their defaults
         console.log("Remember me enabled for this session");
       }
       
