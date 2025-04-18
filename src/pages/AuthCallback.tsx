@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 const AuthCallback = () => {
   const [error, setError] = useState<string | null>(null);
@@ -13,9 +14,10 @@ const AuthCallback = () => {
     const timer = setTimeout(() => {
       if (window.location.pathname === "/auth/callback") {
         setError("Authentication is taking longer than expected. You will be redirected shortly.");
-        setTimeout(() => navigate("/dashboard"), 3000);
+        toast.error("Authentication took too long. Redirecting to login page.");
+        setTimeout(() => navigate("/login"), 3000);
       }
-    }, 5000);
+    }, 7000);
     
     return () => clearTimeout(timer);
   }, [navigate]);
@@ -39,4 +41,3 @@ const AuthCallback = () => {
 };
 
 export default AuthCallback;
-

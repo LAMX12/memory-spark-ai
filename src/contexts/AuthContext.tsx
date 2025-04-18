@@ -11,7 +11,7 @@ interface AuthContextType {
   signIn: () => void;
   signOut: () => void;
   isAuthenticated: boolean;
-  loginWithEmail: (email: string, password: string) => Promise<void>;
+  loginWithEmail: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
   signUpWithEmail: (email: string, password: string, name: string) => Promise<void>;
 }
 
@@ -38,17 +38,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         } else {
           // Check if user is already signed in
-          const { data: { session } } = await supabase.auth.getSession();
-          if (session) {
-            const currentUser = {
-              id: session.user.id,
-              name: session.user.user_metadata.name || "User",
-              email: session.user.email || "",
-              image: session.user.user_metadata.avatar_url,
-              accessToken: session.access_token,
-              refreshToken: session.refresh_token,
-            };
+          const currentUser = await auth.getCurrentUser();
+          if (currentUser) {
             setUser(currentUser);
+            
+            // Redirect to dashboard if on login/signup page
+            if (location.pathname === '/login' || location.pathname === '/signup') {
+              navigate('/dashboard');
+            }
+          } else if (location.pathname !== '/' && 
+                    location.pathname !== '/login' && 
+                    location.pathname !== '/signup' && 
+                    !location.pathname.startsWith('/auth/')) {
+            // Redirect to login if not authenticated and trying to access protected route
+            navigate('/login', { state: { from: location.pathname } });
           }
         }
       } catch (err) {
@@ -73,7 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         };
         setUser(currentUser);
         
-        if (location.pathname === '/' || location.pathname === '/login') {
+        if (location.pathname === '/' || location.pathname === '/login' || location.pathname === '/signup') {
           navigate('/dashboard');
         }
       }
@@ -98,25 +101,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   
   // Sign out
   const signOut = async () => {
-    await supabase.auth.signOut();
+    await auth.signOut();
     setUser(null);
-    toast.info("You have been signed out");
     navigate('/');
   };
   
-  // Email sign-in
-  const loginWithEmail = async (email: string, password: string) => {
+  // Email sign-in with remember me
+  const loginWithEmail = async (email: string, password: string, rememberMe: boolean = false) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const user = await auth.signInWithEmail(email, password, rememberMe);
       
-      if (error) throw error;
-      toast.success("Successfully signed in!");
+      if (user) {
+        setUser(user);
+        
+        // Get the intended destination from location state, or default to dashboard
+        const from = (location.state as any)?.from || '/dashboard';
+        navigate(from, { replace: true });
+      }
     } catch (error: any) {
       toast.error(error.message || "Failed to sign in");
-      throw error;
     }
   };
   
@@ -136,7 +139,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) throw error;
       
       toast.success("Account created! Please check your email to confirm your account.");
-      navigate('/dashboard');
+      navigate('/login', { state: { message: "Please check your email to confirm your account before logging in." } });
     } catch (error: any) {
       toast.error(error.message || "Failed to create account");
       throw error;

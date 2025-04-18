@@ -33,12 +33,16 @@ export const auth = {
         options: {
           redirectTo: GOOGLE_REDIRECT_URI,
           scopes: GOOGLE_SCOPES.join(" "),
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          }
         }
       });
       
       if (error) {
         console.error("Google sign in error:", error);
-        toast.error("Google sign in failed");
+        toast.error("Google sign in failed: " + error.message);
       }
     } catch (error) {
       console.error("Google sign in error:", error);
@@ -114,6 +118,48 @@ export const auth = {
     } catch (error) {
       console.error("Auth check error:", error);
       return false;
+    }
+  },
+
+  // Email sign-in with remember me
+  signInWithEmail: async (email: string, password: string, rememberMe: boolean = false): Promise<User | null> => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+        options: {
+          // Set session duration to 30 days if remember me is checked
+          // or 1 day if not checked
+          expiresIn: rememberMe ? 30 * 24 * 60 * 60 : 24 * 60 * 60
+        }
+      });
+      
+      if (error) {
+        console.error("Email sign in error:", error);
+        toast.error(error.message || "Failed to sign in");
+        return null;
+      }
+      
+      if (!data.user || !data.session) {
+        toast.error("Sign in failed. Please try again.");
+        return null;
+      }
+      
+      const user: User = {
+        id: data.user.id,
+        name: data.user.user_metadata.name || data.user.email?.split('@')[0] || "User",
+        email: data.user.email || "",
+        image: data.user.user_metadata.avatar_url,
+        accessToken: data.session.access_token,
+        refreshToken: data.session.refresh_token,
+      };
+      
+      toast.success("Successfully signed in!");
+      return user;
+    } catch (error: any) {
+      console.error("Email sign in error:", error);
+      toast.error(error.message || "Failed to sign in");
+      return null;
     }
   }
 };
