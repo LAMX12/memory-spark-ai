@@ -1,9 +1,12 @@
 
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Brain } from "lucide-react";
+import { ArrowRight, Brain, Google } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Hero = () => {
+  const { signIn, isAuthenticated } = useAuth();
+  
   return (
     <section className="py-16 md:py-24 w-full overflow-hidden">
       <div className="content-container">
@@ -23,12 +26,33 @@ const Hero = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 pt-4">
-            <Button asChild size="lg" className="rounded-full bg-primary hover:bg-primary/90 text-lg px-8">
-              <Link to="/onboarding">
-                Start Your Second Brain For Free
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
+            {isAuthenticated ? (
+              <Button asChild size="lg" className="rounded-full bg-primary hover:bg-primary/90 text-lg px-8">
+                <Link to="/dashboard">
+                  Go to Dashboard
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+              </Button>
+            ) : (
+              <>
+                <Button 
+                  onClick={signIn}
+                  size="lg" 
+                  variant="outline"
+                  className="rounded-full border-primary/30 text-lg px-8 flex items-center"
+                >
+                  <Google className="mr-2 h-5 w-5" />
+                  Sign in with Google
+                </Button>
+                
+                <Button asChild size="lg" className="rounded-full bg-primary hover:bg-primary/90 text-lg px-8">
+                  <Link to="/onboarding">
+                    Start Your Second Brain For Free
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Link>
+                </Button>
+              </>
+            )}
           </div>
           
           <div className="pt-10 flex justify-center">
@@ -49,3 +73,4 @@ const Hero = () => {
 };
 
 export default Hero;
+

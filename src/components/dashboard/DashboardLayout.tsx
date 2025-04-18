@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Bell, Brain, Menu, Search, User } from "lucide-react";
+import { Bell, Brain, Menu, Search, User, LogOut, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sidebar, SidebarContent, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -8,6 +8,8 @@ import { DashboardSidebar } from "./DashboardSidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAuth } from "@/contexts/AuthContext";
+import { Link, useNavigate } from "react-router-dom";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -15,7 +17,18 @@ interface DashboardLayoutProps {
 
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const isMobile = useIsMobile();
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+  
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/dashboard/search?q=${encodeURIComponent(searchQuery)}`);
+      setIsSearchOpen(false);
+    }
+  };
   
   return (
     <SidebarProvider>
@@ -40,15 +53,17 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             
             <div className="flex items-center space-x-2">
               {isSearchOpen ? (
-                <div className="relative w-full md:w-64">
+                <form onSubmit={handleSearch} className="relative w-full md:w-64">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder="Search your brain..."
                     className="pl-9"
                     autoFocus
-                    onBlur={() => setIsSearchOpen(false)}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onBlur={() => !searchQuery && setIsSearchOpen(false)}
                   />
-                </div>
+                </form>
               ) : (
                 <Button
                   variant="ghost"
@@ -67,16 +82,16 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="rounded-full" size="icon">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src="/placeholder.svg" />
-                      <AvatarFallback>JD</AvatarFallback>
+                      <AvatarImage src={user?.image || ""} alt={user?.name || "User"} />
+                      <AvatarFallback>{user?.name?.charAt(0) || "U"}</AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
                   <div className="flex items-center justify-start gap-2 p-2">
                     <div className="flex flex-col space-y-1 leading-none">
-                      <p className="font-medium">John Doe</p>
-                      <p className="text-sm text-muted-foreground">john.doe@example.com</p>
+                      <p className="font-medium">{user?.name || "User"}</p>
+                      <p className="text-sm text-muted-foreground">{user?.email || "user@example.com"}</p>
                     </div>
                   </div>
                   <DropdownMenuSeparator />
@@ -90,7 +105,8 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                     Billing
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onClick={signOut}>
+                    <LogOut className="h-4 w-4 mr-2" />
                     Log out
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -109,3 +125,4 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 };
 
 export default DashboardLayout;
+
