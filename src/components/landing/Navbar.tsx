@@ -3,9 +3,11 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Brain, Menu, X } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { isAuthenticated } = useAuth();
 
   return (
     <nav className="py-4 w-full glass-card sticky top-0 z-50">
@@ -24,12 +26,20 @@ const Navbar = () => {
           </div>
           
           <div className="flex space-x-3">
-            <Button variant="outline" asChild>
-              <Link to="/login">Log In</Link>
-            </Button>
-            <Button asChild>
-              <Link to="/onboarding">Sign Up</Link>
-            </Button>
+            {isAuthenticated ? (
+              <Button asChild>
+                <Link to="/dashboard">Dashboard</Link>
+              </Button>
+            ) : (
+              <>
+                <Button variant="outline" asChild>
+                  <Link to="/login">Log In</Link>
+                </Button>
+                <Button asChild>
+                  <Link to="/signup">Sign Up</Link>
+                </Button>
+              </>
+            )}
           </div>
         </div>
         
@@ -52,12 +62,20 @@ const Navbar = () => {
             Blog
           </Link>
           <div className="flex flex-col space-y-2 pt-2 border-t border-border">
-            <Button variant="outline" asChild>
-              <Link to="/login" onClick={() => setIsOpen(false)}>Log In</Link>
-            </Button>
-            <Button asChild>
-              <Link to="/onboarding" onClick={() => setIsOpen(false)}>Sign Up</Link>
-            </Button>
+            {isAuthenticated ? (
+              <Button asChild>
+                <Link to="/dashboard" onClick={() => setIsOpen(false)}>Dashboard</Link>
+              </Button>
+            ) : (
+              <>
+                <Button variant="outline" asChild>
+                  <Link to="/login" onClick={() => setIsOpen(false)}>Log In</Link>
+                </Button>
+                <Button asChild>
+                  <Link to="/signup" onClick={() => setIsOpen(false)}>Sign Up</Link>
+                </Button>
+              </>
+            )}
           </div>
         </div>
       )}

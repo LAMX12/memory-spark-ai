@@ -1,6 +1,6 @@
 
-// Authentication service for SecondBrain AI
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 // Google OAuth Configuration
 const GOOGLE_CLIENT_ID = "252282068953-98bk57a3pbpgkthjd4ln9egbrdv9pm7a.apps.googleusercontent.com";
@@ -26,38 +26,45 @@ export interface User {
 // Auth service functions
 export const auth = {
   // Sign in with Google
-  signInWithGoogle: () => {
-    const authUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
-    authUrl.searchParams.append("client_id", GOOGLE_CLIENT_ID);
-    authUrl.searchParams.append("redirect_uri", GOOGLE_REDIRECT_URI);
-    authUrl.searchParams.append("response_type", "code");
-    authUrl.searchParams.append("scope", GOOGLE_SCOPES.join(" "));
-    authUrl.searchParams.append("access_type", "offline");
-    authUrl.searchParams.append("prompt", "consent");
-    
-    // Redirect to Google OAuth
-    window.location.href = authUrl.toString();
+  signInWithGoogle: async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: GOOGLE_REDIRECT_URI,
+          scopes: GOOGLE_SCOPES.join(" "),
+        }
+      });
+      
+      if (error) {
+        console.error("Google sign in error:", error);
+        toast.error("Google sign in failed");
+      }
+    } catch (error) {
+      console.error("Google sign in error:", error);
+      toast.error("Google sign in failed");
+    }
   },
   
   // Handle OAuth callback
   handleCallback: async (code: string): Promise<User | null> => {
     try {
-      // In a real implementation, we would exchange the code for tokens
-      // For now, we'll simulate the response
-      console.log("Received auth code:", code);
+      const { data, error } = await supabase.auth.getSession();
       
-      // Simulated user data (in a real app, this would come from the backend)
+      if (error || !data.session) {
+        console.error("Auth callback error:", error);
+        toast.error("Authentication failed. Please try again.");
+        return null;
+      }
+      
       const user: User = {
-        id: "google-user-123",
-        name: "Test User",
-        email: "user@example.com",
-        image: "https://api.dicebear.com/7.x/micah/svg?seed=user123",
-        accessToken: "simulated-access-token",
-        refreshToken: "simulated-refresh-token"
+        id: data.session.user.id,
+        name: data.session.user.user_metadata.name || data.session.user.email?.split('@')[0] || "User",
+        email: data.session.user.email || "",
+        image: data.session.user.user_metadata.avatar_url,
+        accessToken: data.session.access_token,
+        refreshToken: data.session.refresh_token,
       };
-      
-      // Store user in localStorage (in real app, would be in HTTP-only cookies or secure storage)
-      localStorage.setItem("sb-user", JSON.stringify(user));
       
       toast.success("Successfully signed in!");
       return user;
@@ -70,20 +77,43 @@ export const auth = {
   
   // Get current user
   getCurrentUser: (): User | null => {
-    const userData = localStorage.getItem("sb-user");
-    return userData ? JSON.parse(userData) : null;
+    try {
+      const session = supabase.auth.session();
+      
+      if (!session) return null;
+      
+      return {
+        id: session.user?.id || "",
+        name: session.user?.user_metadata.name || "User",
+        email: session.user?.email || "",
+        image: session.user?.user_metadata.avatar_url,
+        accessToken: session.access_token,
+        refreshToken: session.refresh_token,
+      };
+    } catch (error) {
+      console.error("Get current user error:", error);
+      return null;
+    }
   },
   
   // Sign out
-  signOut: () => {
-    localStorage.removeItem("sb-user");
-    toast.info("You have been signed out");
-    window.location.href = "/";
+  signOut: async () => {
+    try {
+      await supabase.auth.signOut();
+      toast.info("You have been signed out");
+    } catch (error) {
+      console.error("Sign out error:", error);
+    }
   },
   
   // Check if user is authenticated
-  isAuthenticated: (): boolean => {
-    return !!localStorage.getItem("sb-user");
+  isAuthenticated: async (): Promise<boolean> => {
+    try {
+      const { data } = await supabase.auth.getSession();
+      return !!data.session;
+    } catch (error) {
+      console.error("Auth check error:", error);
+      return false;
+    }
   }
 };
-

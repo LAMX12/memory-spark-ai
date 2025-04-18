@@ -46,7 +46,7 @@ const Hero = () => {
                 </Button>
                 
                 <Button asChild size="lg" className="rounded-full bg-primary hover:bg-primary/90 text-lg px-8">
-                  <Link to="/onboarding">
+                  <Link to="/signup">
                     Start Your Second Brain For Free
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>

@@ -16,6 +16,8 @@ import ProjectsView from "./pages/ProjectsView";
 import ContentView from "./pages/ContentView";
 import SmartSearch from "./pages/SmartSearch";
 import AddContent from "./pages/AddContent";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +30,8 @@ const App = () => (
           <Sonner />
           <Routes>
             <Route path="/" element={<Landing />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             
@@ -49,4 +53,3 @@ const App = () => (
 );
 
 export default App;
-
