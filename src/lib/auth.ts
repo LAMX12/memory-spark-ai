@@ -76,19 +76,19 @@ export const auth = {
   },
   
   // Get current user
-  getCurrentUser: (): User | null => {
+  getCurrentUser: async (): Promise<User | null> => {
     try {
-      const session = supabase.auth.session();
+      const { data } = await supabase.auth.getSession();
       
-      if (!session) return null;
+      if (!data.session) return null;
       
       return {
-        id: session.user?.id || "",
-        name: session.user?.user_metadata.name || "User",
-        email: session.user?.email || "",
-        image: session.user?.user_metadata.avatar_url,
-        accessToken: session.access_token,
-        refreshToken: session.refresh_token,
+        id: data.session.user.id,
+        name: data.session.user.user_metadata.name || "User",
+        email: data.session.user.email || "",
+        image: data.session.user.user_metadata.avatar_url,
+        accessToken: data.session.access_token,
+        refreshToken: data.session.refresh_token,
       };
     } catch (error) {
       console.error("Get current user error:", error);
