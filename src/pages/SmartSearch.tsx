@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ContentCard from "@/components/dashboard/ContentCard";
 import { Search, Loader2 } from "lucide-react";
-import contentService, { Content, ContentType } from "@/lib/content";
+import contentService, { Content } from "@/lib/content";
 import { useAuth } from "@/contexts/AuthContext";
 
 const SmartSearch = () => {
@@ -51,7 +51,7 @@ const SmartSearch = () => {
   
   const filterResultsByType = (type: string): Content[] => {
     if (type === "all") return searchResults;
-    return searchResults.filter(item => item.type === type as ContentType);
+    return searchResults.filter(item => item.type === type);
   };
   
   const filteredResults = filterResultsByType(activeTab);
@@ -142,4 +142,3 @@ const SmartSearch = () => {
 };
 
 export default SmartSearch;
-

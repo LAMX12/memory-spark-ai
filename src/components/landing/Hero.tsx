@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Brain, Google } from "lucide-react";
+import { ArrowRight, Brain, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -41,7 +41,7 @@ const Hero = () => {
                   variant="outline"
                   className="rounded-full border-primary/30 text-lg px-8 flex items-center"
                 >
-                  <Google className="mr-2 h-5 w-5" />
+                  <Mail className="mr-2 h-5 w-5" />
                   Sign in with Google
                 </Button>
                 
@@ -73,4 +73,3 @@ const Hero = () => {
 };
 
 export default Hero;
-

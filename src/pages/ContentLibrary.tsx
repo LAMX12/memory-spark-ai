@@ -2,10 +2,10 @@
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import ContentGrid from "@/components/dashboard/ContentGrid";
+import ContentCard from "@/components/dashboard/ContentCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { BookOpen, FileText, Loader2, Plus, Video } from "lucide-react";
-import { ContentType } from "@/components/dashboard/ContentCard";
 import contentService, { Content } from "@/lib/content";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -34,7 +34,7 @@ const ContentLibrary = () => {
     }
   }, [user]);
   
-  const getFilteredContents = (filterType?: ContentType) => {
+  const getFilteredContents = (filterType?: string) => {
     if (!filterType) return contents;
     return contents.filter(content => content.type === filterType);
   };
@@ -185,4 +185,3 @@ const ContentLibrary = () => {
 };
 
 export default ContentLibrary;
-
