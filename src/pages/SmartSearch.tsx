@@ -5,7 +5,7 @@ import { useLocation } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import ContentCard from "@/components/dashboard/ContentCard";
+import ContentCard, { ContentType } from "@/components/dashboard/ContentCard";
 import { Search, Loader2 } from "lucide-react";
 import contentService, { Content } from "@/lib/content";
 import { useAuth } from "@/contexts/AuthContext";

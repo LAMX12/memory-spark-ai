@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import ContentGrid from "@/components/dashboard/ContentGrid";
-import ContentCard from "@/components/dashboard/ContentCard";
+import ContentCard, { ContentType } from "@/components/dashboard/ContentCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { BookOpen, FileText, Loader2, Plus, Video } from "lucide-react";

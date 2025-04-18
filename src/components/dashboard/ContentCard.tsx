@@ -1,12 +1,11 @@
-
 import { useToast } from "@/hooks/use-toast";
-import { BookOpen, FileText, MoreVertical, Star, Video } from "lucide-react";
+import { BookOpen, FileText, MoreVertical, Star, Video, Mail, Bookmark } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
-export type ContentType = "document" | "video" | "article";
+export type ContentType = "pdf" | "document" | "email" | "video" | "article" | "note";
 
 interface ContentCardProps {
   id: string;
@@ -32,12 +31,18 @@ const ContentCard = ({
   
   const getTypeIcon = () => {
     switch (type) {
+      case "pdf":
+        return <FileText className="h-4 w-4 text-red-400" />;
       case "document":
         return <FileText className="h-4 w-4 text-blue-400" />;
+      case "email":
+        return <Mail className="h-4 w-4 text-purple-400" />;
       case "video":
         return <Video className="h-4 w-4 text-red-400" />;
       case "article":
         return <BookOpen className="h-4 w-4 text-green-400" />;
+      case "note":
+        return <Bookmark className="h-4 w-4 text-yellow-400" />;
       default:
         return <FileText className="h-4 w-4" />;
     }
